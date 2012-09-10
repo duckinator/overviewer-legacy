@@ -20,6 +20,15 @@ $pre = <<EOF
   box-sizing:border-box;
 }
 
+/*
+ * See https://developer.mozilla.org/en/Images,_Tables,_and_Mysterious_Gaps
+ *+ for why this is needed. (it doesn't apply to just tables)
+ */
+a, img {
+	display: inline-block;
+	vertical-align: bottom;
+}
+
 #wrap, body {
   margin: 0;
   padding: 0;
@@ -107,9 +116,42 @@ figcaption {
 
 %related_main%
 
+.related {
+  clear: both;
+  list-style: none;
+}
+
+.related .icon {
+  display: none;
+
+  float: left;
+  padding: 10px;
+  margin: 0;
+
+  height: 90px;
+  width: 90px;
+
+  text-align: center;
+}
+
+.category .related .icon {
+  display: inline-block;
+}
+
+.related .icon img {
+  outline: none;
+
+  max-height: 70px;
+  max-width: 70px;
+}
+
+.related .result {
+  display: inline-block;
+}
+
 </style>
 </head>
-<body>
+<body class="%type%">
 <div id="wrap">
 
 <div id="header">
@@ -124,12 +166,10 @@ $post = <<EOF
 </div>
 
 <div id="related">
-  <p>Related content:</>
-  <p>
-    <ul>
+  <p>Related content:</p>
+  <ul>
 %related%
-    </ul>
-  </p>
+  </ul>
 </div>
 
 <div id="footer">
@@ -170,6 +210,7 @@ def test(query, type = false)
   $title = query
 
   is_category = (type == 'category')
+  default_to_category = (!ddg.definition && !ddg.abstract)
 
   if ddg.related_topics && ddg.related_topics.length > 0
     ddg.related_topics.each do |topic|
@@ -200,11 +241,11 @@ def test(query, type = false)
         next
       end
 
-      $related += "<li><img src=\"#{icon['URL']}\" width=\"#{icon['Width']}\" height=\"#{icon['Height']}\"> #{result}</li>\n"
+      $related += "<li class=\"related\"><p class=\"icon\"><img src=\"#{icon['URL']}\"></p><p class=\"result\">#{result}</p></li>\n"
     end
   end
 
-  if (!ddg.definition && !ddg.abstract) || is_category
+  if default_to_category || is_category
     $related_main = '#related { background: white; float: none; width: 100%; border-left: none; }'
   end
 
@@ -224,28 +265,35 @@ def test(query, type = false)
     end
   end
 =end
-pp ddg.json
+#pp ddg.json
   # Wikipedia
 
   if ddg.wikipedia_article
     dbp = DBPedia.new(ddg.wikipedia_article)
     #dbp.test
   end
+
+  if is_category || default_to_category
+    type = 'category'
+  end
+
+  type
 end
 
 get '/' do
   ret = ''
 
-  type = params[:type]
+  type = params[:type] || ''
 
   if params[:q]
-    test(params[:q], type)
+    type = test(params[:q], type)
     ret = $pre + $text + $post
   else
     $title = 'Overviewer'
     ret = $pre + '<form action="/" method="GET"><input type="text" id="q" name="q"><input type="submit" value="Search"></form>' + $post
   end
 
+  ret.gsub!('%type%', type)
   ret.gsub!('%title%', $title)
   ret.gsub!('%related%', $related)
   ret.gsub!('%related_main%', $related_main)
