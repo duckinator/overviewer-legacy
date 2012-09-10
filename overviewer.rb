@@ -155,7 +155,7 @@ def quote(text, source, url)
 EOF
 end
 
-def test(query)
+def test(query, type = false)
   $text = ''
   $related_main = ''
   $related = ''
@@ -169,25 +169,29 @@ def test(query)
 
   $title = query.capitalize
 
-  if ddg.related_topics.length > 0
+  is_category = (type == 'category')
+
+  if ddg.related_topics && ddg.related_topics.length > 0
     ddg.related_topics.each do |topic|
       icon = topic['Icon']
-      result = topic['Result'].gsub('<a href="http://duckduckgo.com/', '<a href="/?q=')
+      result = topic['Result']
+      result.gsub!('<a href="http://duckduckgo.com/c/', '<a href="/?type=category&q=')
+      result.gsub!('<a href="http://duckduckgo.com/', '<a href="/?q=')
       result.gsub!('_','+')
 
       $related += "<li><img src=\"#{icon['URL']}\" width=\"#{icon['Width']}\" height=\"#{icon['Height']}\"> #{result}</li>\n"
     end
   end
 
-  if !ddg.definition && !ddg.abstract
+  if (!ddg.definition && !ddg.abstract) || is_category
     $related_main = '#related { background: white; float: none; width: 100%; border-left: none; }'
   end
 
-  if ddg.definition
+  if ddg.definition && !is_category
     quote(ddg.definition, ddg.definition_source, "")
   end
 
-  if ddg.abstract
+  if ddg.abstract && !is_category
     quote(ddg.abstract, ddg.abstract_source, ddg.abstract_url)
   end
 
@@ -211,8 +215,10 @@ end
 get '/' do
   ret = ''
 
+  type = params[:type]
+
   if params[:q]
-    test params[:q]
+    test(params[:q], type)
     ret = $pre + $text + $post
   else
     $title = 'Overviewer'
