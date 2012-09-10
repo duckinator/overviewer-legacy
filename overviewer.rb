@@ -6,6 +6,7 @@ require 'sinatra'
 # YES THIS ENTIRE THING IS A HACK. I KNOW. STOP.
 
 $related_main = ''
+$related = ''
 
 $pre = <<EOF
 <!DOCTYPE html>
@@ -29,36 +30,30 @@ $pre = <<EOF
 }
 
 blockquote {
-  padding: 0;
-  margin: 10px;
-  margin-left: 20px;
+  position: relative;
 
-  padding-left: 2.5em;
+  margin: 10px;
+
+  padding: 0 2.5em;
 
   font-style: italic;
 }
 
 blockquote::before, blockquote::after {
-  /*position: absolute;*/
+  position: absolute;
   font-size: 2em;
   font-weight: bold;
 }
 
 blockquote::before {
   content: '\\201C';
-  /*margin-left: -1em;*/
-  /*margin-top: -0.3em;*/
-  margin-right: 0.2em;
+  margin-left: -1em;
+  margin-top: -0.2em;
 }
 
 blockquote::after {
   content: '\\201D';
-  /*right: 0;*/
-  /*padding-left: 0.5em;
-  margin-bottom: -3em;*/
-  position: absolute;
-  margin-left: 0.2em;
-  bottom: 0.5em;
+  right: 0.5em;
 }
 
 figure {
@@ -163,6 +158,7 @@ end
 def test(query)
   $text = ''
   $related_main = ''
+  $related = ''
   ddg = DuckDuckGo.new(query)
   #pp ddg.json
   #pp ddg.abstract
@@ -174,8 +170,6 @@ def test(query)
   $title = query.capitalize
 
   if ddg.related_topics.length > 0
-    $related = ''
-
     ddg.related_topics.each do |topic|
       icon = topic['Icon']
       result = topic['Result'].gsub('<a href="http://duckduckgo.com/', '<a href="/?q=')
