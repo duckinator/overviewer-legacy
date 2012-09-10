@@ -167,7 +167,7 @@ def test(query, type = false)
   #abstract = ddg.abstract
   #related  = ddg.related
 
-  $title = query.capitalize
+  $title = query
 
   is_category = (type == 'category')
 
@@ -178,6 +178,27 @@ def test(query, type = false)
       result.gsub!('<a href="http://duckduckgo.com/c/', '<a href="/?type=category&q=')
       result.gsub!('<a href="http://duckduckgo.com/', '<a href="/?q=')
       result.gsub!('_','+')
+
+      # HACK.
+      result_query = if result.include?('?q=')
+        result.split('?q=')[1]
+      elsif result.include?('&q=')
+        result.split('&q=')[1]
+      else
+        ''
+      end.split('"')[0]
+
+      result_type = if result.include?('?type=')
+        result.split('?type=')[1]
+      elsif result.include?('&type')
+        result.split('&type=')[1]
+      else
+        ''
+      end.split('&')[0]
+
+      if (CGI.escape(query).downcase == result_query.downcase) && (result_type == type)
+        next
+      end
 
       $related += "<li><img src=\"#{icon['URL']}\" width=\"#{icon['Width']}\" height=\"#{icon['Height']}\"> #{result}</li>\n"
     end
