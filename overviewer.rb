@@ -133,7 +133,7 @@ $post = <<EOF
 </div>
 
 <div id="footer">
-This site uses services the following:
+This site uses the following services:
 <ul>
   <li><a href="http://duckduckgo.com">duckduckgo</a>: <a href="http://duckduckgo.com/api.html">Zero-click Info API</a>.</li>
   <li><a href="http://bing.com">Bing&trade;</a>: <a href="https://datamarket.azure.com/dataset/5BA839F1-12CE-4CCE-BF57-A49D98D29A44">Bing&trade; Search API</a>.</li>
