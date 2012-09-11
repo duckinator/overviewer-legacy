@@ -18,13 +18,19 @@ class Overviewer < Sinatra::Application
     ret = []
 
     topics.each do |topic|
-      if topic.is_a?(Hash) && topic['Topics']
-        handle_topics(query, topic['Topics'], type)
-      end
-
-      unless topic['Result']
-        pp topic
-        exit
+      if topic.is_a?(Hash) && topic.include?('Topics')
+        # This returns something of the format:
+        # {"Topics"=>
+        #   [{"Result"=>
+        #      ...},
+        #    <snip>
+        #    {"Result"=>
+        #      ...}],
+        #  "Name"=>"Category"}
+        #
+        # This should probably use 'Name', but it doesn't for now.
+        ret += handle_topics(query, topic['Topics'], type)
+        next
       end
 
       icon = topic['Icon']
