@@ -37,7 +37,9 @@ class DuckDuckGo
 
     url = abstract_url
 
-    url.gsub(/https.*\/wiki\//, '')
+    url.sub!(/^https.*\/wiki\//, '')
+    url.sub!(/_\(disambiguation\)$/, '')
+    url
   end
 
   def fetch_raw(query)

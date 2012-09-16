@@ -97,16 +97,16 @@ class DBPedia
           ret[type] ||= {}
           ret[type][lang] = hash['value']
         end
+        pp ret
       when RDF_COMMENT_IDENTIFIER
-        puts "DBpedia RDF comment"
-        pp value;puts;puts
         value.each do |h|
           if h['type'] == 'literal' && h['lang'] == @lang
             @comment = h['value']
             break
           end
         end
-        @comment
+        puts "DBpedia RDF comment:"
+        pp comment;puts;puts
       when OWL_SAMEAS_IDENTIFIER
         puts "DBpedia OWL sameas"
         pp value;puts;puts
