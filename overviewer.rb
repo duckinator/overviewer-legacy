@@ -124,7 +124,7 @@ class Overviewer < Sinatra::Application
     pp dbp.test
     puts;puts
 
-        hash[:title] = hash[:name] = dbp.name
+        hash[:title] = hash[:name] = dbp.name if dbp.name.is_a?(String)
 
         hash[:wp_url] = dbp.url
         hash[:summary] = dbp.summary || dbp.comment
