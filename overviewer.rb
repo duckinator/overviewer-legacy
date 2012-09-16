@@ -152,6 +152,8 @@ class Overviewer < Sinatra::Application
       end
     end
 
+    hash[:type] = 'category' if hash[:summary].nil? || hash[:summary].empty?
+
     liquid :index, :locals => hash
   end
 end
