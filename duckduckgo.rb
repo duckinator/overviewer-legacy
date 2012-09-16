@@ -28,8 +28,12 @@ class DuckDuckGo
     end
   end
 
+  def uses_wikipedia?
+    abstract_source == 'Wikipedia'
+  end
+
   def wikipedia_article
-    return false unless abstract_source == 'Wikipedia'
+    return nil unless uses_wikipedia?
 
     url = abstract_url
 

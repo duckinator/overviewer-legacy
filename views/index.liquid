@@ -169,7 +169,29 @@ figcaption {
 
 <div id="main">
 
-{{ text }}
+<div id="summary">
+{% if noresults %}
+<p>Looks like there were no results for "<em>{{ query }}</em>!"</p>
+{% endif %}
+
+{% if summary %}
+<figure>
+	<blockquote>{{ summary }}</blockquote>
+	<figcaption><a href="{{ summary_source_url }}">{{ summary_source_name }}</a></figcaption>
+</figure>
+{% endif %}
+
+{% if links %}
+<p>Relevant links:</p>
+<ul>
+{% if homepage %}<li><a href="{{ homepage }}">{{ name }} (homepage)</a>{% endif %}
+{% if wp_url   %}<li><a href="{{ wp_url }}">{{ name }} on Wikipedia</a>{% endif %}
+{% if map_url  %}<li><a href="{{ map_url }}">{{ name }} on {{ map_site_name }}</a>{% endif %}
+</ul>
+{% endif %}
+</div>
+
+<!-- Insert information gathered from Bing results here. -->
 
 </div>
 
