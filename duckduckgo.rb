@@ -28,12 +28,18 @@ class DuckDuckGo
     end
   end
 
+  def uses_wikipedia?
+    abstract_source == 'Wikipedia'
+  end
+
   def wikipedia_article
-    return false unless abstract_source == 'Wikipedia'
+    return nil unless uses_wikipedia?
 
     url = abstract_url
 
-    url.gsub(/https.*\/wiki\//, '')
+    url.sub!(/^https.*\/wiki\//, '')
+    url.sub!(/_\(disambiguation\)$/, '')
+    url
   end
 
   def fetch_raw(query)

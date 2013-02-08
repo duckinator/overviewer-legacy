@@ -3,6 +3,8 @@ require File.join(File.dirname(__FILE__), 'duckduckgo.rb')
 require 'pp'
 require 'sinatra'
 require 'liquid'
+require 'uri'
+require 'cgi'
 
 class Overviewer < Sinatra::Application
   def quote(text, source, url)
@@ -18,13 +20,19 @@ class Overviewer < Sinatra::Application
     ret = []
 
     topics.each do |topic|
-      if topic.is_a?(Hash) && topic['Topics']
-        handle_topics(query, topic['Topics'], type)
-      end
-
-      unless topic['Result']
-        pp topic
-        exit
+      if topic.is_a?(Hash) && topic.include?('Topics')
+        # This returns something of the format:
+        # {"Topics"=>
+        #   [{"Result"=>
+        #      ...},
+        #    <snip>
+        #    {"Result"=>
+        #      ...}],
+        #  "Name"=>"Category"}
+        #
+        # This should probably use 'Name', but it doesn't for now.
+        ret += handle_topics(query, topic['Topics'], type)
+        next
       end
 
       icon = topic['Icon']
@@ -34,22 +42,9 @@ class Overviewer < Sinatra::Application
       result.gsub!('<a href="http://duckduckgo.com/', '<a href="/?q=')
       result.gsub!('_','+')
 
-      # HACK.
-      result_query = if result.include?('?q=')
-        result.split('?q=')[1]
-      elsif result.include?('&amp;q=')
-        result.split('&amp;q=')[1]
-      else
-        ''
-      end.split('"')[0]
-
-      result_type = if result.include?('?type=')
-        result.split('?type=')[1]
-      elsif result.include?('&type')
-        result.split('&type=')[1]
-      else
-        ''
-      end.split('&')[0]
+      result_query = result.split('<a href="')[-1].split('">')[0]
+      query_hash = CGI::parse(URI.parse(result_query).query)
+      result_type = (query_hash['type'] || ['']).last
 
       if (CGI.escape(query).downcase == result_query.downcase) && (result_type == type)
         next
@@ -61,20 +56,21 @@ class Overviewer < Sinatra::Application
     ret
   end
 
-  def test(query, type = false)
-    text = ''
+  def ddg(query, type = nil)
+    summary = ''
     ddg = DuckDuckGo.new(query)
 
     is_category = (type == 'category')
 
     related = handle_topics(query, (ddg.json['RelatedTopics'] || []), type)
+    article = ddg.wikipedia_article
 
     if ddg.definition && !is_category
-      text += quote(ddg.definition, ddg.definition_source, "")
+      summary += quote(ddg.definition, ddg.definition_source, "")
     end
 
     if ddg.abstract && !is_category
-      text += quote(ddg.abstract, ddg.abstract_source, ddg.abstract_url)
+      summary += quote(ddg.abstract, ddg.abstract_source, ddg.abstract_url)
     end
 
 =begin
@@ -85,36 +81,79 @@ class Overviewer < Sinatra::Application
       end
     end
 =end
-    #pp ddg.json
-    # Wikipedia
-
-    if ddg.wikipedia_article
-      dbp = DBPedia.new(ddg.wikipedia_article)
-      #dbp.test
-    end
 
     if is_category || (!ddg.definition && !ddg.abstract)
       type = 'category'
     end
 
-    [text, related, type]
+    article = nil unless ddg.uses_wikipedia? && !summary.empty?
+
+    [summary, related, type, article]
+  end
+
+  def dbpedia(article, type = nil)
+    DBPedia.new(article)
   end
 
   get '/' do
-    text = ''
+    summary = ''
+    article = nil
 
     query = params[:q]
     type  = params[:type] || ''
 
     if query
-      text, related, type = test(query, type)
+      summary, related, type, article = ddg(query, type)
     end
 
-    liquid :index, :locals => {
+    hash = {
       :type    => type,
       :title   => query,
+      :name    => query,
+      :query   => query,
       :related => related,
-      :text    => text,
     }
+
+    if query && !summary.empty?
+      hash[:wikipedia] = article
+
+      if hash[:wikipedia]
+        dbp = dbpedia(article, type)
+
+    puts;puts
+    pp dbp.test
+    puts;puts
+
+        hash[:title] = hash[:name] = dbp.name if dbp.name.is_a?(String)
+
+        hash[:wp_url] = dbp.url
+        hash[:summary] = dbp.summary || dbp.comment
+        hash[:summary_source_url]  = dbp.url
+        hash[:summary_source_name] = 'Wikipedia'
+
+        hash[:homepage] = dbp.homepage
+
+        hash[:geo_lat]  = dbp.geo_lat
+        hash[:geo_long] = dbp.geo_long
+        hash[:geo_full] = dbp.geo_full
+
+        if hash[:geo_lat] && hash[:geo_long]
+          hash[:map_url] = "https://maps.google.com/maps?q=#{CGI.escape(query)}&sll=#{hash[:geo_lat]},#{hash[:geo_long]}"
+          hash[:map_site_name] = 'Google Maps'
+        end
+
+        # hash[:links] is an or'd (||) list of URLs,
+        # so it's truthy if there's a URL to show.
+        hash[:links] = hash[:homepage] || hash[:map_url]
+      else
+        # Not using this since we can't guarantee it's properly attributed.
+        hash[:noresults] = true
+        #hash[:raw_summary] = summary
+      end
+    end
+
+    hash[:type] = 'category' if hash[:summary].nil? || hash[:summary].empty?
+
+    liquid :index, :locals => hash
   end
 end
