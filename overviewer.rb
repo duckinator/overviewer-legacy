@@ -5,6 +5,7 @@ require 'sinatra'
 require 'liquid'
 require 'uri'
 require 'cgi'
+require 'htmlentities'
 
 class Overviewer < Sinatra::Application
   def quote(text, source, url)
@@ -102,7 +103,7 @@ class Overviewer < Sinatra::Application
     summary = ''
     article = nil
 
-    query = params[:q]
+    query = HTMLEntities.new.encode(params[:q])
     type  = params[:type] || ''
 
     if query
