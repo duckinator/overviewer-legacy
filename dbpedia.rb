@@ -4,7 +4,8 @@ require 'json'
 class DBPedia
   attr_accessor :json, :article, :url,
                 :comment, :summary, :homepage, :name,
-                :geo_lat, :geo_long, :geo_full, :geo_geometry
+                :geo_lat, :geo_long, :geo_full, :geo_geometry,
+                :property, :ontology
 
   PRIMARY_TOPIC_IDENTIFIER = 'http://xmlns.com/foaf/0.1/primaryTopic'
   DEPICTION_IDENTIFIER     = 'http://xmlns.com/foaf/0.1/depiction'

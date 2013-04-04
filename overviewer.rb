@@ -42,8 +42,11 @@ class Overviewer < Sinatra::Application
       result.gsub!('<a href="http://duckduckgo.com/', '<a href="/?q=')
       result.gsub!('_','+')
 
+      result.gsub!('?q=?q=', '?q=') # Is this because of 3 lines up?
+
       result_query = result.split('<a href="')[-1].split('">')[0]
-      query_hash = CGI::parse(URI.parse(result_query).query)
+
+      query_hash = CGI::parse(URI.parse(URI.encode(result_query)).query)
       result_type = (query_hash['type'] || ['']).last
 
       if (CGI.escape(query).downcase == result_query.downcase) && (result_type == type)
