@@ -16,5 +16,5 @@ PLATFORMS
 
 DEPENDENCIES
   liquid (~> 2.4.1)
-  rack (~> 1.4.1)
-  sinatra (~> 1.3.3)
+  rack (~> 1.4.5)
+  sinatra (~> 1.3.4)
