@@ -106,7 +106,7 @@ class Overviewer < Sinatra::Application
     query = HTMLEntities.new.encode(params[:q])
     type  = params[:type] || ''
 
-    if query
+    if query && !query.empty?
       summary, related, type, article = ddg(query, type)
     end
 
@@ -118,7 +118,7 @@ class Overviewer < Sinatra::Application
       :related => related,
     }
 
-    if query && !summary.empty?
+    if query && !query.empty? && !summary.empty?
       hash[:wikipedia] = article
 
       if hash[:wikipedia]
