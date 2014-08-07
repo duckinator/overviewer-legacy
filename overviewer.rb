@@ -39,8 +39,8 @@ class Overviewer < Sinatra::Application
       icon = topic['Icon']
       result = topic['Result']
 
-      result.gsub!('<a href="http://duckduckgo.com/c/', '<a href="/?type=category&amp;q=')
-      result.gsub!('<a href="http://duckduckgo.com/', '<a href="/?q=')
+      result.gsub!('<a href="https://duckduckgo.com/c/', '<a href="/?type=category&amp;q=')
+      result.gsub!('<a href="https://duckduckgo.com/', '<a href="/?q=')
       result.gsub!('_','+')
 
       result.gsub!('?q=?q=', '?q=') # Is this because of 3 lines up?
